@@ -48,7 +48,7 @@ contract BinVipHook is BinBaseHook, VipDiscountMap {
         returns (bytes4, BeforeSwapDelta, uint24)
     {
         uint24 dynFee = getFee(tx.origin);
-        // emit tx.origin & poolid
+        // emit tx.origin
         return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, dynFee | LPFeeLibrary.OVERRIDE_FEE_FLAG);
     }
 }

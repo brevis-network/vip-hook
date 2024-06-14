@@ -17,7 +17,9 @@ import {VipDiscountMap} from "../VipDiscountMap.sol";
 contract CLCounterHook is CLBaseHook, VipDiscountMap {
     using PoolIdLibrary for PoolKey;
 
-    constructor(ICLPoolManager _poolManager) CLBaseHook(_poolManager) {}
+    constructor(ICLPoolManager _poolManager, uint24 _origFee) CLBaseHook(_poolManager) {
+        origFee = _origFee;
+    }
 
     function getHooksRegistrationBitmap() external pure override returns (uint16) {
         return _hooksRegistrationBitmapFrom(
