@@ -22,7 +22,7 @@ contract CLTestUtils {
     function deployContractsWithTokens() internal returns (Currency, Currency) {
         vault = new Vault();
         poolManager = new CLPoolManager(vault, 500000);
-        vault.registerPoolManager(address(poolManager));
+        // vault.registerPoolManager(address(poolManager));
 
         nfp = new NonfungiblePositionManager(vault, poolManager, address(0), address(0));
         swapRouter = new CLSwapRouter(vault, poolManager, address(0));
