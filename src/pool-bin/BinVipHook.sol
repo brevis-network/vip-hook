@@ -6,6 +6,7 @@ import {PoolKey} from "@pancakeswap/v4-core/src/types/PoolKey.sol";
 import {BalanceDelta} from "@pancakeswap/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta, BeforeSwapDeltaLibrary} from "@pancakeswap/v4-core/src/types/BeforeSwapDelta.sol";
 import {PoolId, PoolIdLibrary} from "@pancakeswap/v4-core/src/types/PoolId.sol";
+import {IBinDynamicFeeManager} from "@pancakeswap/v4-core/src/pool-bin/interfaces/IBinDynamicFeeManager.sol";
 import {IBinPoolManager} from "@pancakeswap/v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
 import {BinBaseHook} from "./BinBaseHook.sol";
 import {VipDiscountMap} from "../VipDiscountMap.sol";
@@ -13,7 +14,7 @@ import {VipDiscountMap} from "../VipDiscountMap.sol";
 // TODO: integrate Brevis callback
 
 /// @notice BinVipHook is a contract that provides fee discount based on VIP tiers
-contract BinVipHook is BinBaseHook, VipDiscountMap {
+contract BinVipHook is IBinDynamicFeeManager, BinBaseHook, VipDiscountMap {
     using PoolIdLibrary for PoolKey;
 
     constructor(IBinPoolManager _poolManager, uint24 _origFee) BinBaseHook(_poolManager) {
@@ -41,6 +42,8 @@ contract BinVipHook is BinBaseHook, VipDiscountMap {
         );
     }
 
+    // afterInitialize poolManager.updateDynamicLPFee
+
     function beforeSwap(address, PoolKey calldata key, bool, uint128, bytes calldata)
         external
         override
@@ -50,5 +53,10 @@ contract BinVipHook is BinBaseHook, VipDiscountMap {
         uint24 dynFee = getFee(tx.origin);
         // emit tx.origin
         return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, dynFee | LPFeeLibrary.OVERRIDE_FEE_FLAG);
+    }
+
+    // satisfy IBinDynamicFeeManager. caller should set msg.sender to actual user address for accurate result
+    function getFeeForSwapInSwapOut(address usr, PoolKey calldata, bool, uint128, uint128) external view returns (uint24) {
+        return getFee(usr);
     }
 }
