@@ -6,6 +6,7 @@ pragma solidity ^0.8.24;
 // map of addr=>feeDiscountPercentage. value is percentage*100, eg. 20% is recorded as 2000
 // max value is 10000 (means 100% discount, aka 0 fee)
 abstract contract VipDiscountMap {
+    event FeeDiscountUpdated(address indexed usr, uint16 indexed discount);
     uint16 public constant MAX_DISCOUNT = 10000;
 
     // default fee. 10% is 100_000; max is 100% 1_000_000
@@ -22,7 +23,13 @@ abstract contract VipDiscountMap {
         for (uint256 i=0; i<=raw.length/22; i++) {
             uint16 disc = uint16(bytes2(raw[idx+20:22]));
             require(disc <= MAX_DISCOUNT, "discount greater than 100%");
-            feeDiscount[address(bytes20(raw[idx:idx+20]))] = disc;
+            address usr = address(bytes20(raw[idx:idx+20]));
+            // due to fixed circuit output, we may have 0 addr for padding. break to save gas
+            if (usr == address(0)) {
+                break;
+            }
+            feeDiscount[usr] = disc;
+            emit FeeDiscountUpdated(usr, disc);
         }
     }
 

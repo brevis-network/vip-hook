@@ -9,16 +9,32 @@ import {PoolId, PoolIdLibrary} from "@pancakeswap/v4-core/src/types/PoolId.sol";
 import {ICLPoolManager} from "@pancakeswap/v4-core/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {CLBaseHook} from "./CLBaseHook.sol";
 import {VipDiscountMap} from "../VipDiscountMap.sol";
+import {BrevisApp} from "../BrevisApp.sol";
+import {Ownable} from "../Ownable.sol";
 
-// TODO: integrate Brevis callback
-
-/// @notice CLCounterHook is a contract that counts the number of times a hook is called
-/// @dev note the code is not production ready, it is only to share how a hook looks like
-contract CLCounterHook is CLBaseHook, VipDiscountMap {
+/// @notice CLVipHook is a contract that provides fee discount based on VIP tiers
+contract CLVipHook is CLBaseHook, VipDiscountMap, BrevisApp, Ownable {
     using PoolIdLibrary for PoolKey;
+    event FeeUpdated(uint24 fee);
+    event BrevisReqUpdated(address addr);
+    event VkHashUpdated(bytes32 vkhash);
 
-    constructor(ICLPoolManager _poolManager, uint24 _origFee) CLBaseHook(_poolManager) {
+    // need this to proper tracking "user"
+    event TxOrigin(address indexed addr); // index field to save zk parsinig cost
+
+    bytes32 public vkHash; // BrevisApp to ensure correct circuit
+
+    constructor(ICLPoolManager _poolManager, uint24 _origFee, address _brevisRequest) CLBaseHook(_poolManager) BrevisApp(_brevisRequest) {
         origFee = _origFee;
+    }
+
+    // called by proxy to properly set storage of proxy contract
+    function init(uint24 _origFee, address _brevisRequest, bytes32 _vkHash) external {
+        initOwner(); // will fail if not called via delegateCall b/c owner is set in Ownable constructor
+        // no need to emit event as it's first set in proxy state
+        _setBrevisRequest(_brevisRequest);
+        origFee = _origFee;
+        vkHash = _vkHash;
     }
 
     function getHooksRegistrationBitmap() external pure override returns (uint16) {
@@ -30,7 +46,7 @@ contract CLCounterHook is CLBaseHook, VipDiscountMap {
                 afterAddLiquidity: false,
                 beforeRemoveLiquidity: false,
                 afterRemoveLiquidity: false,
-                beforeSwap: true,
+                beforeSwap: true, // only beforeSwap
                 afterSwap: false,
                 beforeDonate: false,
                 afterDonate: false,
@@ -49,6 +65,28 @@ contract CLCounterHook is CLBaseHook, VipDiscountMap {
         returns (bytes4, BeforeSwapDelta, uint24)
     {
         uint24 dynFee = getFee(tx.origin);
+        emit TxOrigin(tx.origin);
         return (this.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, dynFee | LPFeeLibrary.OVERRIDE_FEE_FLAG);
+    }
+
+    // brevisApp interface
+    function handleProofResult(bytes32 _vkHash, bytes calldata _appCircuitOutput) internal override {
+        require(vkHash == _vkHash, "invalid vk");
+        updateBatch(_appCircuitOutput);
+    }
+
+    function setFee(uint24 _newfee) external onlyOwner {
+        origFee = _newfee;
+        emit FeeUpdated(_newfee);
+    }
+
+    function setVkHash(bytes32 _vkh) external onlyOwner {
+        vkHash = _vkh;
+        emit VkHashUpdated(_vkh);        
+    }
+
+    function setBrevisRequest(address _brevisRequest) external onlyOwner {
+        _setBrevisRequest(_brevisRequest);
+        emit BrevisReqUpdated(_brevisRequest);
     }
 }
