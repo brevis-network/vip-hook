@@ -1,12 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import {
+    HOOKS_BEFORE_INITIALIZE_OFFSET,
+    HOOKS_AFTER_INITIALIZE_OFFSET,
+    HOOKS_BEFORE_MINT_OFFSET,
+    HOOKS_AFTER_MINT_OFFSET,
+    HOOKS_BEFORE_BURN_OFFSET,
+    HOOKS_AFTER_BURN_OFFSET,
+    HOOKS_BEFORE_SWAP_OFFSET,
+    HOOKS_AFTER_SWAP_OFFSET,
+    HOOKS_BEFORE_DONATE_OFFSET,
+    HOOKS_AFTER_DONATE_OFFSET,
+    HOOKS_BEFORE_SWAP_RETURNS_DELTA_OFFSET,
+    HOOKS_AFTER_SWAP_RETURNS_DELTA_OFFSET,
+    HOOKS_AFTER_MINT_RETURNS_DELTA_OFFSET,
+    HOOKS_AFTER_BURN_RETURNS_DELTA_OFFSET
+} from "@pancakeswap/v4-core/src/pool-bin/interfaces/IBinHooks.sol";
 import {PoolKey} from "@pancakeswap/v4-core/src/types/PoolKey.sol";
-import {BalanceDelta} from "@pancakeswap/v4-core/src/types/BalanceDelta.sol";
 import {BeforeSwapDelta} from "@pancakeswap/v4-core/src/types/BeforeSwapDelta.sol";
+import {BalanceDelta} from "@pancakeswap/v4-core/src/types/BalanceDelta.sol";
 import {IHooks} from "@pancakeswap/v4-core/src/interfaces/IHooks.sol";
 import {IVault} from "@pancakeswap/v4-core/src/interfaces/IVault.sol";
-import "@pancakeswap/v4-core/src/pool-bin/interfaces/IBinHooks.sol";
 import {IBinHooks} from "@pancakeswap/v4-core/src/pool-bin/interfaces/IBinHooks.sol";
 import {IBinPoolManager} from "@pancakeswap/v4-core/src/pool-bin/interfaces/IBinPoolManager.sol";
 import {BinPoolManager} from "@pancakeswap/v4-core/src/pool-bin/BinPoolManager.sol";
@@ -124,11 +139,15 @@ abstract contract BinBaseHook is IBinHooks {
         revert HookNotImplemented();
     }
 
-    function beforeSwap(address, PoolKey calldata, bool, uint128, bytes calldata) external virtual returns (bytes4, BeforeSwapDelta, uint24) {
+    function beforeSwap(address, PoolKey calldata, bool, int128, bytes calldata)
+        external
+        virtual
+        returns (bytes4, BeforeSwapDelta, uint24)
+    {
         revert HookNotImplemented();
     }
 
-    function afterSwap(address, PoolKey calldata, bool, uint128, BalanceDelta, bytes calldata)
+    function afterSwap(address, PoolKey calldata, bool, int128, BalanceDelta, bytes calldata)
         external
         virtual
         returns (bytes4, int128)
