@@ -19,15 +19,17 @@ abstract contract VipDiscountMap {
     function updateBatch(bytes calldata raw) internal {
         require(raw.length > 0, "empty data");
         require(raw.length % 22 == 0, "incorrect data length");
-        uint256 idx = 0;
-        for (uint256 i=0; i<=raw.length/22; i++) {
-            uint16 disc = uint16(bytes2(raw[idx+20:22]));
-            require(disc <= MAX_DISCOUNT, "discount greater than 100%");
+
+        for (uint256 idx=0; idx<raw.length; idx+=22) {
             address usr = address(bytes20(raw[idx:idx+20]));
             // due to fixed circuit output, we may have 0 addr for padding. break to save gas
             if (usr == address(0)) {
                 break;
             }
+
+            uint16 disc = uint16(bytes2(raw[idx+20:22]));
+            require(disc <= MAX_DISCOUNT, "discount greater than 100%");
+
             feeDiscount[usr] = disc;
             emit FeeDiscountUpdated(usr, disc);
         }
