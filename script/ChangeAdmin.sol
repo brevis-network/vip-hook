@@ -7,7 +7,7 @@ import {ITransparentUpgradeableProxy} from "../lib/openzeppelin-contracts/contra
 
 contract Deploy is Script {
     function run() public {
-        address hookAddr = 0x45337f035B519ebBa5951Abf9263E39c9de0aB74;
+        address hookAddr = vm.envAddress("HOOK_ADDR");
         address newAdmin = 0xa500023551388763B720808C0b0CDf00A752b69f;
         ITransparentUpgradeableProxy proxy = ITransparentUpgradeableProxy(hookAddr);
         

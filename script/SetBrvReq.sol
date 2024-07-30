@@ -7,8 +7,8 @@ import {BinVipHook} from "../src/pool-bin/BinVipHook.sol";
 
 contract Deploy is Script {
     function run() public {
-        address hookAddr = address(0x45337f035B519ebBa5951Abf9263E39c9de0aB74);
-        address brvReq = address(0xF7E9CB6b7A157c14BCB6E6bcf63c1C7c92E952f5);
+        address hookAddr = vm.envAddress("HOOK_ADDR");
+        address brvReq = 0xF7E9CB6b7A157c14BCB6E6bcf63c1C7c92E952f5;
         BinVipHook binHook = BinVipHook(hookAddr);
         
         vm.startBroadcast();
