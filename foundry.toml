@@ -1,7 +1,7 @@
 [profile.default]
 src = 'src'
 out = 'foundry-out'
-solc_version = '0.8.24'
+solc_version = '0.8.26'
 libs = ["lib"]
 evm_version = 'cancun'
 ffi = true

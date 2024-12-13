@@ -99,11 +99,11 @@ abstract contract CLBaseHook is ICLHooks {
         }
     }
 
-    function beforeInitialize(address, PoolKey calldata, uint160, bytes calldata) external virtual returns (bytes4) {
+    function beforeInitialize(address, PoolKey calldata, uint160) external virtual returns (bytes4) {
         revert HookNotImplemented();
     }
 
-    function afterInitialize(address, PoolKey calldata, uint160, int24, bytes calldata)
+    function afterInitialize(address, PoolKey calldata, uint160, int24)
         external
         virtual
         returns (bytes4)
@@ -125,6 +125,7 @@ abstract contract CLBaseHook is ICLHooks {
         PoolKey calldata,
         ICLPoolManager.ModifyLiquidityParams calldata,
         BalanceDelta,
+        BalanceDelta feesAccrued,
         bytes calldata
     ) external virtual returns (bytes4, BalanceDelta) {
         revert HookNotImplemented();
@@ -144,6 +145,7 @@ abstract contract CLBaseHook is ICLHooks {
         PoolKey calldata,
         ICLPoolManager.ModifyLiquidityParams calldata,
         BalanceDelta,
+        BalanceDelta feesAccrued,
         bytes calldata
     ) external virtual returns (bytes4, BalanceDelta) {
         revert HookNotImplemented();
