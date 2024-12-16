@@ -17,12 +17,14 @@ contract CLVipHook is CLBaseHook, VipDiscountMap, BrevisApp, Ownable {
     using PoolIdLibrary for PoolKey;
     event FeeUpdated(uint24 fee);
     event BrevisReqUpdated(address addr);
-    event VkHashUpdated(bytes32 vkhash);
+    event VkHashAdded(bytes32 vkhash);
+    event VkHashRemoved(bytes32 vkhash);
 
     // need this to proper tracking "user"
     event TxOrigin(address indexed addr); // index field to save zk parsinig cost
 
-    bytes32 public vkHash; // BrevisApp to ensure correct circuit
+    // supported vkhash
+    mapping(bytes32 => bool) public vkmap;
 
     constructor(ICLPoolManager _poolManager, uint24 _origFee, address _brevisRequest) CLBaseHook(_poolManager) BrevisApp(_brevisRequest) {
         origFee = _origFee;
@@ -34,7 +36,7 @@ contract CLVipHook is CLBaseHook, VipDiscountMap, BrevisApp, Ownable {
         // no need to emit event as it's first set in proxy state
         _setBrevisRequest(_brevisRequest);
         origFee = _origFee;
-        vkHash = _vkHash;
+        vkmap[_vkHash] = true;
     }
 
     function getHooksRegistrationBitmap() external pure override returns (uint16) {
@@ -71,7 +73,7 @@ contract CLVipHook is CLBaseHook, VipDiscountMap, BrevisApp, Ownable {
 
     // brevisApp interface
     function handleProofResult(bytes32 _vkHash, bytes calldata _appCircuitOutput) internal override {
-        require(vkHash == _vkHash, "invalid vk");
+        require(vkmap[_vkHash], "invalid vk");
         updateBatch(_appCircuitOutput);
     }
 
@@ -80,9 +82,14 @@ contract CLVipHook is CLBaseHook, VipDiscountMap, BrevisApp, Ownable {
         emit FeeUpdated(_newfee);
     }
 
-    function setVkHash(bytes32 _vkh) external onlyOwner {
-        vkHash = _vkh;
-        emit VkHashUpdated(_vkh);        
+    function addVkHash(bytes32 _vkh) external onlyOwner {
+        vkmap[_vkh]=true;
+        emit VkHashAdded(_vkh);        
+    }
+
+    function rmVkHash(bytes32 _vkh) external onlyOwner {
+        delete vkmap[_vkh];
+        emit VkHashRemoved(_vkh);
     }
 
     function setBrevisRequest(address _brevisRequest) external onlyOwner {

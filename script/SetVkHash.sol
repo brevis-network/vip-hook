@@ -12,7 +12,7 @@ contract Deploy is Script {
         BinVipHook binHook = BinVipHook(hookAddr);
         
         vm.startBroadcast();
-        binHook.setVkHash(vkhash);
+        binHook.addVkHash(vkhash);
         vm.stopBroadcast();
     }
 }
